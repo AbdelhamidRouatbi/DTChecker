@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.xtext.stlrobust.spec.ui.tests
+Bundle-ManifestVersion: 2
+Bundle-Name: org.xtext.stlrobust.spec.ui.tests
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.202507142117
+Bundle-SymbolicName: org.xtext.stlrobust.spec.ui.tests; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.xtext.stlrobust.spec.ui,org.eclipse.xtext.testing,or
+ g.eclipse.xtext.ui.testing,org.eclipse.xtext.xbase.testing,org.eclipse.
+ xtext.xbase.ui.testing,org.eclipse.core.runtime,org.eclipse.ui.workbenc
+ h;resolution:=optional
+Import-Package: org.junit.jupiter.api;version="[5.1.0,6.0.0)",org.junit.
+ jupiter.api.extension;version="[5.1.0,6.0.0)"
+Export-Package: org.xtext.stlrobust.ui.tests;x-internal=true
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=21))"
+

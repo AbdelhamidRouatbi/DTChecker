@@ -1,0 +1,101 @@
+class PlotRenderer extends React.Component {
+
+			      constructor(props) {
+			        super(props);
+			        this.state = {
+			          times: props.times || [],
+			          values: props.values || [],
+			        }
+			      }
+			      
+
+			      render() {
+			        const style = {
+			          width: "calc(30vw - 50px)",
+			          height: "calc(30vh - 50px)",
+			          margin: "20px",
+			        };
+
+			        const lineLayer = {
+			          type: "line",
+			          x: "_time",
+			          y: "_value"
+			        };
+
+			        const table = Giraffe.newTable(this.state.times.length)
+			          .addColumn('_time', 'dateTime:RFC3339', 'time', this.state.times)
+			          .addColumn('_value', 'double', 'number', this.state.values);
+
+			        const config = {
+			          table,
+			          layers: [lineLayer]
+			        };
+
+			        const SimplePlot = React.createElement(Giraffe.Plot, {config}, null);
+			        return React.createElement('div', {style}, SimplePlot);
+			      }
+			    }
+
+			    var data = {}
+				
+			    function addPoint(spec, timestamp, robustness){
+			      if (!data[spec]) {
+					data[spec] = {
+						timestamps: [],
+						values: []
+					}
+					createSpecTab(spec);
+				  }
+				  
+				  data[spec].timestamps.push(timestamp);
+				  data[spec].values.push(robustness);
+				  
+				  
+				  let e = document.getElementById(spec);
+				  
+				  if (!e) {
+					e = document.createElement('div');
+					e.style.boxShadow = "inset 0 0 0 4px grey";
+					e.style.padding = "20px";
+					e.style.backgroundColor = "#f5f5f5";
+					e.id = spec;
+					
+					const container = document.getElementById('dashboards-view');
+					if (container) {
+						container.appendChild(e);
+					}
+				  }
+				  			  
+			      ReactDOM.render(
+			        React.createElement(PlotRenderer, {times: data[spec].timestamps, values: data[spec].values}),
+			          e
+			        );
+			    }
+				
+				function createSpecTab(spec) {
+				  const specNavbar = document.getElementById('spec-navbar');
+
+				  // Deactivate all existing tabs
+				  document.querySelectorAll('#spec-navbar .nav-link').forEach(tab => tab.classList.remove('active'));
+				  document.querySelectorAll('#spec-content .tab-pane').forEach(pane => {
+				    pane.classList.remove('show', 'active');
+				  });
+
+				  // Create new tab item
+				  const li = document.createElement('li');
+				  li.className = 'nav-item';
+				  li.role = 'presentation';
+
+				  const button = document.createElement('button');
+				  button.className = 'nav-link active';
+				  button.id = `${spec}-tab`;
+				  button.dataset.bsToggle = 'tab';
+				  button.dataset.bsTarget = `#${spec}-pane`;
+				  button.type = 'button';
+				  button.role = 'tab';
+				  button.setAttribute('aria-controls', `${spec}-pane`);
+				  button.setAttribute('aria-selected', 'true');
+				  button.textContent = spec;
+				  li.appendChild(button);
+				  specNavbar.appendChild(li);
+				}

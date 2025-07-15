@@ -1,0 +1,28 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.xtext.stlrobust.spec
+Bundle-ManifestVersion: 2
+Bundle-Name: org.xtext.stlrobust.spec
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: org.xtext.stlrobust.spec; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.37.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Export-Package: org.xtext.stlrobust.validation,
+ org.xtext.stlrobust.serializer,
+ org.xtext.stlrobust.generator,
+ org.xtext.stlrobust.parser.antlr.internal,
+ org.xtext.stlrobust.spec.util,
+ org.xtext.stlrobust,
+ org.xtext.stlrobust.spec,
+ org.xtext.stlrobust.services,
+ org.xtext.stlrobust.parser.antlr,
+ org.xtext.stlrobust.scoping,
+ org.xtext.stlrobust.spec.impl
+Import-Package: org.apache.log4j

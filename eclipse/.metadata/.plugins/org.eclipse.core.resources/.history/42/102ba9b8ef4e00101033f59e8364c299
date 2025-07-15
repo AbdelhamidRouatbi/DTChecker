@@ -1,0 +1,117 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Language" content="en-us">
+	<title>Example Web Editor</title>
+	<link rel="stylesheet" type="text/css" href="xtext/2.37.0/xtext-ace.css"/>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script src="webjars/requirejs/2.3.7/require.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script>
+	       window.__define = window.define;
+	       window.__require = window.require;
+	       window.define = undefined;
+	       window.require = undefined;
+	   </script>
+	   <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+	     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+	     <script crossorigin src="https://unpkg.com/@influxdata/giraffe"></script>
+	   <script>
+	           window.define = window.__define;
+	           window.require = window.__require;
+	           window.__define = undefined;
+	           window.__require = undefined;
+	       </script>
+	
+	
+	
+	<script type="text/javascript">
+		var baseUrl = window.location.pathname;
+		var fileIndex = baseUrl.indexOf("index.html");
+		if (fileIndex > 0)
+			baseUrl = baseUrl.slice(0, fileIndex);
+		require.config({
+			baseUrl: baseUrl,
+			paths: {
+				"jquery": "webjars/jquery/3.6.0/jquery.min",
+				"ace/ext/language_tools": "webjars/ace/1.3.3/src/ext-language_tools",
+				"xtext/xtext-ace": "xtext/2.37.0/xtext-ace"
+			}
+		});
+		require(["webjars/ace/1.3.3/src/ace"], function() {
+			require(["xtext/xtext-ace"], function(xtext) {
+				var editor = xtext.createEditor({
+					baseUrl: baseUrl,
+					syntaxDefinition: "xtext-resources/generated/mode-spec"
+				});
+				
+				$("#save-button").click(function() {
+					
+					var content = editor.xtextServices.generate().then(function(result) {
+						fetch('http://127.0.0.1:5000/generate', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'text/plain'
+							},
+							body: result
+						})
+						.then(response => response.text())
+						.then(data => console.log("Response from server:", data))
+						.catch(error => console.error("Error:", error));
+					});
+				})
+			});
+		});
+		
+		const eventSource = new EventSource('http://127.0.0.1:5000/stream');
+		eventSource.onmessage = function(event) {
+			console.log("Received from stream: ", event.data);
+			var data = JSON.parse(event.data);
+			addPoint(data.spec, data.result[0][0], data.result[0][1])
+		};
+	</script>
+</head>
+<body>
+
+<div class="container">
+	<div class="header">
+		<h1>Example Spec Web Editor</h1>
+	</div>
+	<div class="content">
+		<div id="xtext-editor" data-editor-xtext-lang="spec"></div>
+		<dashboard id="dashboards-view">
+
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			  <div class="container-fluid">
+
+			    <!-- Replaced brand with custom button -->
+			    <button id="save-button">
+			      Generate
+			    </button>
+
+			    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+			      <span class="navbar-toggler-icon"></span>
+			    </button>
+
+			    <div class="collapse navbar-collapse" id="navbarMenu">
+					<ul class="navbar-nav me-auto mb-2 mb-lg-0" id="spec-navbar">
+					  <!-- Dynamic spec items will be injected here -->
+					</ul>
+			      </ul>
+			    </div>
+			  </div>
+			</nav>
+			
+			<script type="text/javascript" src="script.js">
+			    
+			  </script>
+
+		</dashboard>
+	</div>
+</div>
+
+</body>
+</html>
+
+

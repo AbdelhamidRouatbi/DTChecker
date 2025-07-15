@@ -1,0 +1,110 @@
+grammar org.xtext.stlrobust.Spec with org.eclipse.xtext.common.Terminals
+
+generate spec "http://www.xtext.org/stlrobust/Spec"
+
+Model:
+	Signals+=Signal*
+	Specifications+=Specification*
+;
+
+Signal:
+	'signal' name=ID 'from' queueName=STRING
+;
+
+Specification:
+	'specification' name=ID ':'
+	'scope' scope=Scope
+	'pattern' pattern=Pattern
+;
+
+Scope:
+	{GlobalScope} 'Globally' |{BeforeScope} 'Before' r=Expression |{AfterScope} 'After' q=Expression |
+	{BetweenScope} 'Between' q=Expression 'and' r=Expression |{AfterUntilScope} 'After' q=Expression 'until' r=Expression
+;
+
+Pattern:
+	'Universality:' Universality |
+    'Absence:' Absence |
+    'Existence:' Existence |
+    'MinimumDuration:' MinimumDuration |
+    'MaximumDuration:' MaximumDuration |
+    'Recurrence:' Recurrence |
+    'Precedence:' Precedence |
+    'Until:' Until |
+    'Response:' Response |
+    'ResponseInvariance:' ResponseInvariance
+    //'PrecedenceChain1N:' PrecedenceChain1N |
+    //'PrecedenceChainN1:' PrecedenceChainN1 |
+    //'ResponseChain1N:' ResponseChain1N |
+    //'ResponseChainN1:' ResponseChainN1 |
+;
+
+Universality:
+	"it-is-always-the-case-that" p=Expression 'holds'?
+;
+
+Absence:
+	"It-is-never-the-case-that" p=Expression 'holds'?
+;
+
+Existence:
+	"Eventually" p=Expression 'holds'? time=Time
+;
+
+MinimumDuration:
+	"a"
+;
+
+MaximumDuration:
+	"a"
+;
+
+Recurrence:
+	"a"
+;
+
+Precedence:
+	"a"
+;
+
+Until:
+	"a"
+;
+
+Response:
+	"if" p=Expression "then-in-response" s=Expression ('eventually holds')? time=Time
+;
+
+ResponseInvariance:
+	"a"
+;
+
+Number:
+	sign=('-')? intValue=INT ('.' decimalValue=INT)?
+;
+
+
+Expression:
+	(s1=[Signal] | f1=Number) operator=('>' | '>=' | '=' | '<' | '<=') (s2=[Signal] | f2=Number)
+;
+
+Time:
+	UpperTimeBound | LowerTimeBound | Interval
+;
+
+UpperTimeBound:
+	'within' value=INT unit=TimeUnits
+;
+
+LowerTimeBound:
+	'after' value=INT unit=TimeUnits
+;
+
+Interval:
+	'between' min=INT 'and' max=INT unit=TimeUnits
+;
+
+TimeUnits:
+	'ms' | 's' | 'min'
+;
+

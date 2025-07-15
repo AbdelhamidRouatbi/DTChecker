@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.xtext.stlrobust.spec.ui
+Bundle-ManifestVersion: 2
+Bundle-Name: org.xtext.stlrobust.spec.ui
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.202507142117
+Bundle-SymbolicName: org.xtext.stlrobust.spec.ui; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.xtext.stlrobust.spec,org.xtext.stlrobust.spec.ide,or
+ g.eclipse.xtext.ui,org.eclipse.xtext.ui.shared,org.eclipse.xtext.ui.cod
+ etemplates.ui,org.eclipse.ui.editors;bundle-version="3.14.300",org.ecli
+ pse.ui.ide;bundle-version="3.18.500",org.eclipse.ui,org.eclipse.compare
+ ,org.eclipse.xtext.builder
+Import-Package: org.apache.log4j
+Export-Package: org.xtext.stlrobust.spec.ui.internal,org.xtext.stlrobust
+ .ui.quickfix,org.xtext.stlrobust.ui.contentassist
+Bundle-Activator: org.xtext.stlrobust.spec.ui.internal.SpecActivator
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=21))"
+
