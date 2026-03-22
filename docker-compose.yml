@@ -1,0 +1,70 @@
+services:
+
+  # ── 1. Message broker ──────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: dtchecker-rabbitmq
+    ports:
+      - "5672:5672"       # AMQP
+      - "15672:15672"     # management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: incubator
+      RABBITMQ_DEFAULT_PASS: incubator
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── 2. Xtext / Jetty DSL editor (Java) ────────────────────────────────────
+  xtext:
+    build:
+      context: .                          # project root — COPY eclipse/... works from here
+      dockerfile: docker/xtext/Dockerfile
+    container_name: dtchecker-xtext
+    ports:
+      - "8090:8090"
+    environment:
+      FLASK_BACKEND_URL: "http://flask:5000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # ── 3. Flask back-end ─────────────────────────────────────────────────────
+  flask:
+    build:
+      context: .                          # project root — can see both python/ and docker/
+      dockerfile: docker/flask/Dockerfile
+    container_name: dtchecker-flask
+    ports:
+      - "5000:5000"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: incubator
+      RABBITMQ_PASS: incubator
+    volumes:
+      # Share generated monitor.py + specs.py between flask and monitor
+      - monitor_workdir:/app/workdir
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # ── 4. Monitor runner (spawned on demand, always running) ─────────────────
+  monitor:
+    build:
+      context: .                           # project root — can see both python/ and docker/
+      dockerfile: docker/monitor/Dockerfile
+    container_name: dtchecker-monitor
+    environment:
+      FLASK_URL: "http://flask:5000"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: incubator
+      RABBITMQ_PASS: incubator
+    volumes:
+      - monitor_workdir:/app/workdir
+    depends_on:
+      - flask
+      - rabbitmq
+
+volumes:
+  monitor_workdir:

@@ -1,0 +1,12 @@
+# Compiled output — rebuilt inside Docker
+**/target/
+**/xtend-gen/
+
+# Eclipse project files
+**/.project
+**/.classpath
+**/.settings/
+
+# OS noise
+**/.DS_Store
+**/Thumbs.db

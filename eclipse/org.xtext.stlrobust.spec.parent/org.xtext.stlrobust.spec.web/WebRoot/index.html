@@ -27,6 +27,15 @@
 	
 	
 	
+	<script>
+		// FLASK_BACKEND_URL can be overridden at build time or via a meta tag injected by the server.
+		// Default: same host, port 5000.
+		window.FLASK_BACKEND_URL = (function() {
+			var meta = document.querySelector('meta[name="flask-backend-url"]');
+			if (meta) return meta.getAttribute('content');
+			return window.location.protocol + '//' + window.location.hostname + ':5000';
+		})();
+	</script>
 	<script type="text/javascript">
 		var baseUrl = window.location.pathname;
 		var fileIndex = baseUrl.indexOf("index.html");
@@ -50,7 +59,7 @@
 				$("#save-button").click(function() {
 					
 					var content = editor.xtextServices.generate().then(function(result) {
-						fetch('http://127.0.0.1:5000/generate', {
+						fetch(window.FLASK_BACKEND_URL + '/generate', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'text/plain'
@@ -65,7 +74,7 @@
 			});
 		});
 		
-		const eventSource = new EventSource('http://127.0.0.1:5000/stream');
+		const eventSource = new EventSource(window.FLASK_BACKEND_URL + '/stream');
 		eventSource.onmessage = function(event) {
 			console.log("Received from stream: ", event.data);
 			var data = JSON.parse(event.data);

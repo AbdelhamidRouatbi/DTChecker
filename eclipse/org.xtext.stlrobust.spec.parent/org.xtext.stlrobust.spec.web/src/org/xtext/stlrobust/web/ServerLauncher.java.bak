@@ -24,9 +24,7 @@ public class ServerLauncher {
 	private static final Logger LOG = LoggerFactory.getLogger(ServerLauncher.class);
 	
 	public static void main(String[] args) {
-		String host = System.getenv().getOrDefault("XTEXT_HOST", "0.0.0.0");
-		int port = Integer.parseInt(System.getenv().getOrDefault("XTEXT_PORT", "8090"));
-		Server server = new Server(new InetSocketAddress(host, port));
+		Server server = new Server(new InetSocketAddress("localhost", 8090));
 		WebAppContext ctx = new WebAppContext();
 		ctx.setResourceBase("WebRoot");
 		ctx.setWelcomeFiles(new String[] {"index.html"});

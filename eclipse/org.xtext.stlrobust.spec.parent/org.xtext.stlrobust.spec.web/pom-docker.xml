@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pom-docker.xml  -  Tycho-free build for DTChecker.
+
+  Build phases:
+    1. initialize:       javac pre-compiles spec-src-gen (EMF model classes)
+                         into target/model-classes so Xtend can find them.
+    2. generate-sources: xtend:compile transpiles .xtend -> xtend-gen/
+    3. compile:          javac compiles everything together.
+
+  Usage: mvn -f pom-docker.xml jetty:run
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.xtext.stlrobust.spec</groupId>
+  <artifactId>org.xtext.stlrobust.spec.web.docker</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>war</packaging>
+
+  <properties>
+    <xtextVersion>2.37.0</xtextVersion>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <model.classes.dir>${project.build.directory}/model-classes</model.classes.dir>
+  </properties>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.xtend</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <!-- PHASE 1: Pre-compile EMF model classes so Xtend can resolve them -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>pre-compile-model-classes</id>
+            <phase>initialize</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <mkdir dir="${model.classes.dir}"/>
+                <path id="dep.classpath">
+                  <fileset dir="${settings.localRepository}">
+                    <include name="**/*.jar"/>
+                  </fileset>
+                </path>
+                <!-- spec-src-gen imports SpecGenerator (xtend-gen), SpecScopeProvider,
+                     SpecValidator (spec-src) — all three dirs needed together. -->
+                <javac
+                  destdir="${model.classes.dir}"
+                  source="21" target="21"
+                  encoding="UTF-8"
+                  includeantruntime="false"
+                  classpathref="dep.classpath"
+                  excludes="**/*.xtend,**/*.mwe2">
+                  <src path="${project.basedir}/spec-src"/>
+                  <src path="${project.basedir}/spec-src-gen"/>
+                  <src path="${project.basedir}/xtend-gen"/>
+                </javac>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- PHASE 2: Xtend compiler - .xtend -> xtend-gen/ -->
+      <plugin>
+        <groupId>org.eclipse.xtend</groupId>
+        <artifactId>xtend-maven-plugin</artifactId>
+        <version>${xtextVersion}</version>
+        <executions>
+          <execution>
+            <id>xtend-compile</id>
+            <phase>generate-sources</phase>
+            <goals><goal>compile</goal></goals>
+            <configuration>
+              <outputDirectory>${project.basedir}/xtend-gen</outputDirectory>
+              <testOutputDirectory>${project.basedir}/xtend-gen</testOutputDirectory>
+              <sourceDirectories>
+                <sourceDirectory>${project.basedir}/spec-src</sourceDirectory>
+              </sourceDirectories>
+              <additionalClasspathElements>
+                <additionalClasspathElement>${model.classes.dir}</additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Add all source roots (xtend-gen populated by phase 2) -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals><goal>add-source</goal><goal>add-resource</goal></goals>
+            <configuration>
+              <sources>
+                <source>src-gen</source>
+                <source>spec-src</source>
+                <source>spec-src-gen</source>
+                <source>xtend-gen</source>
+                <source>ide-src</source>
+                <source>ide-src-gen</source>
+              </sources>
+              <resources>
+                <resource>
+                  <directory>src-gen</directory>
+                  <excludes><exclude>**/*.java</exclude></excludes>
+                </resource>
+                <resource>
+                  <directory>spec-src-gen</directory>
+                  <excludes><exclude>**/*.java</exclude></excludes>
+                </resource>
+                <resource>
+                  <directory>ide-src-gen</directory>
+                  <excludes><exclude>**/*.java</exclude></excludes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Exclude .xtend/.mwe2 from javac -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <excludes>
+            <exclude>**/*.xtend</exclude>
+            <exclude>**/*.mwe2</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <!-- WAR packaging -->
+      <plugin>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.3.2</version>
+        <configuration>
+          <warSourceDirectory>WebRoot</warSourceDirectory>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+        </configuration>
+      </plugin>
+
+      <!-- Embedded Jetty -->
+      <plugin>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>11.0.23</version>
+        <configuration>
+          <webAppSourceDirectory>WebRoot</webAppSourceDirectory>
+          <httpConnector>
+            <port>8090</port>
+          </httpConnector>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.xtext</groupId>
+      <artifactId>org.eclipse.xtext.xbase.web</artifactId>
+      <version>${xtextVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.xtext</groupId>
+      <artifactId>org.eclipse.xtext.web.servlet</artifactId>
+      <version>${xtextVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.xtend</groupId>
+      <artifactId>org.eclipse.xtend.lib</artifactId>
+      <version>${xtextVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>requirejs</artifactId>
+      <version>2.3.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery</artifactId>
+      <version>3.6.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>ace</artifactId>
+      <version>1.3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-annotations</artifactId>
+      <version>11.0.23</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>2.0.5</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+</project>
